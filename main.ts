@@ -82,3 +82,6 @@ process.stdout.write(
   `token radar: ${rows.length} pre-token protocols ranked, watchlist ${snap.watchlist.length}/${snap.watchlist.length} covered; ` +
     `wrote board.json, data.js, dashboard/, screenshots/ (${shots.length} images) and dossier.json to ${out}\n`,
 );
+for (const r of rows.slice(0, 5)) {
+  process.stdout.write(`  #${r.rank} ${r.name} — $${r.implied_value_usd.toLocaleString('en-US')} implied\n`);
+}

@@ -6,7 +6,9 @@
 //   implied = TVL x category multiple x momentum x maturity x breadth
 // - category multiple: the FDV/TVL a token in that sector typically launches at;
 //   curators and basis desks capture fees on other people's capital, so they sit
-//   below 1, while chains and exchanges capture their whole economy, above 2.
+//   below 1, while chains capture their whole economy, above 2. An exchange's
+//   TVL is client custody, not the protocol's own capital, so CEX sits low too:
+//   an exchange token's value tracks fees and buybacks, not the deposits it holds.
 // - momentum: the snapshot's own 7-day TVL change, damped and clamped, so a
 //   protocol growing into its launch is worth more than one bleeding out.
 // - maturity: how long the protocol has run with no token (listed_at to as_of);
@@ -63,7 +65,7 @@ const DAY_MS = 86_400_000;
 /** Sector launch multiples (FDV per dollar of TVL) the model applies. */
 export const CATEGORY_MULTIPLE: Record<string, number> = {
   'Chain': 3.5,
-  'CEX': 2.8,
+  'CEX': 0.35,
   'Derivatives': 2.4,
   'Perps': 2.4,
   'Dexs': 2.2,
