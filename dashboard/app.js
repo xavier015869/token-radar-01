@@ -190,7 +190,7 @@ $('chain').innerHTML += chains.map((c) => `<option>${c}</option>`).join('');
 const totalImplied = rows.reduce((a, r) => a + r.implied, 0);
 $('stats').innerHTML = `
   <div><dt>Protocols ranked</dt><dd>${rows.length}</dd></div>
-  <div><dt>Watchlist covered</dt><dd>${rows.filter((r) => r.watch).length} / ${rows.filter((r) => r.watch).length}</dd></div>
+  <div><dt>Watchlist covered</dt><dd>${rows.filter((r) => r.watch).length} / ${R.watch_total}</dd></div>
   <div><dt>Combined implied value</dt><dd>${fmt$(totalImplied)}</dd></div>`;
 $('asof').textContent = R.as_of;
 for (const id of ['q', 'cat', 'chain', 'watch', 'sort']) $(id).addEventListener('input', render);

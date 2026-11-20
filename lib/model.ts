@@ -98,6 +98,20 @@ export function isPreToken(p: Protocol): boolean {
   return p.gecko_id === null && p.symbol === null;
 }
 
+/**
+ * True when the protocol is a representation of another asset — a wrapped,
+ * staked or bridged form of something that already trades (WBTC, a staked-ETH
+ * product, an exchange's canonical bridge). Such a product cannot launch a
+ * first token of its own, so the radar leaves it off the board, the same
+ * reasoning the snapshot's own watchlist rule applies. Detected from the
+ * snapshot's fields alone: the Bridge categories, whose TVL is other assets
+ * in transit, or a name carrying the whole word wrapped, staked or staking.
+ */
+export function isRepresentation(p: Protocol): boolean {
+  if (p.category === 'Bridge' || p.category === 'Canonical Bridge') return true;
+  return /\b(wrapped|staked|staking)\b/i.test(p.name);
+}
+
 /** Whole days the protocol has been tracked, tokenless, at the snapshot date. */
 export function ageInDays(p: Protocol, asOf: string): number {
   if (p.listed_at === null) return 0;
@@ -127,11 +141,11 @@ export function scoreProtocol(p: Protocol, asOf: string, watch: boolean): Scored
   return { p, ageDays, multiple, momentum, maturity, breadth, implied, confidence, watch };
 }
 
-/** Every pre-token protocol in the snapshot, best implied value first. */
+/** Every pre-token, non-representation protocol in the snapshot, best first. */
 export function buildBoard(snap: Snapshot): Scored[] {
   const watch = new Set(snap.watchlist);
   const scored = snap.protocols
-    .filter(isPreToken)
+    .filter((p) => isPreToken(p) && !isRepresentation(p))
     .map((p) => scoreProtocol(p, snap.as_of, watch.has(p.slug)));
   scored.sort((a, b) => b.implied - a.implied || b.p.tvl_usd - a.p.tvl_usd || a.p.slug.localeCompare(b.p.slug));
   return scored;
@@ -277,7 +291,7 @@ export function dataScript(board: Scored[], snap: Snapshot): string {
     Number(s.maturity.toFixed(3)),
     Number(s.breadth.toFixed(2)),
   ]);
-  const payload = { as_of: snap.as_of, floor_usd: snap.floor_usd, total: board.length, rows };
+  const payload = { as_of: snap.as_of, floor_usd: snap.floor_usd, total: board.length, watch_total: snap.watchlist.length, rows };
   return `window.RADAR = ${JSON.stringify(payload)};\n`;
 }
 
