@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Launch Radar — every pre-token protocol, ranked</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-in">
+    <div>
+      <h1>Token Launch Radar</h1>
+      <p class="tagline">Every protocol that still records no token, ranked by what its token would be worth if its record stayed as it is — and how to farm each one before it launches.</p>
+    </div>
+    <dl class="stats" id="stats"></dl>
+  </div>
+  <p class="model-note">The model, stated plainly: <strong>implied value = TVL × sector multiple × momentum × maturity × breadth</strong>. The sector multiple is the FDV/TVL tokens in that sector launch at; momentum damps the snapshot's own 7-day TVL change; maturity rewards a long tokenless record; breadth adds a little per extra chain. No name is hardcoded: change the snapshot and the board re-ranks itself.</p>
+</header>
+
+<section class="controls" aria-label="Board controls">
+  <label>Search <input id="q" type="search" placeholder="protocol or slug"></label>
+  <label>Category <select id="cat"><option value="">All categories</option></select></label>
+  <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+  <label class="check"><input id="watch" type="checkbox"> Watchlist only (≥ $50M TVL)</label>
+  <label>Sort <select id="sort">
+    <option value="rank">Implied value</option>
+    <option value="tvl">TVL</option>
+    <option value="chg">7-day growth</option>
+    <option value="age">Tokenless age</option>
+    <option value="conf">Confidence</option>
+  </select></label>
+  <span id="count" class="count"></span>
+</section>
+
+<main class="layout">
+  <div class="board-wrap">
+    <table class="board">
+      <thead><tr>
+        <th class="num">#</th><th>Protocol</th><th>Category</th><th class="num">TVL</th>
+        <th class="num">7d</th><th class="num">Age</th><th class="num">Implied value</th><th class="num">Conf.</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <aside class="detail" id="detail" aria-live="polite"></aside>
+</main>
+
+<footer>
+  <p>Data: the sealed DefiLlama snapshot of <span id="asof"></span>. “Records no token” is what the snapshot says — a protocol may still have a token its record does not carry. Implied values are this board's own model, not a prediction that a token will be issued.</p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
