@@ -15,7 +15,7 @@
     </div>
     <dl class="stats" id="stats"></dl>
   </div>
-  <p class="model-note">The model, stated plainly: <strong>implied value = TVL × sector multiple × momentum × maturity × breadth</strong>. The sector multiple is the FDV/TVL tokens in that sector launch at; momentum damps the snapshot's own 7-day TVL change; maturity rewards a long tokenless record; breadth adds a little per extra chain. No name is hardcoded: change the snapshot and the board re-ranks itself. Wrapped, staked and bridged representation products (WBTC and its kin) are excluded — they are forms of assets that already trade and cannot launch a first token of their own.</p>
+  <p class="model-note">The model, stated plainly: <strong>implied value = TVL × sector multiple × momentum × maturity × breadth</strong>. Every sector multiple is measured from this snapshot's own tokenized protocols — the median market-cap-to-TVL of the ones that already trade — blended with a prior where peers are few: no name and no multiple is hardcoded, and change the snapshot and the board re-ranks itself. Momentum shrinks the snapshot's own 7-day TVL change toward zero for small protocols, whose weeks are mostly noise, before it counts; maturity rewards a long tokenless record; breadth adds a little per extra chain. 416 protocols in the snapshot already record a token and are set aside, and 61 more are wrapped, staked or bridged representation products (WBTC and its kin) — forms of assets that already trade, which cannot launch a first token of their own. This board ranks only the 281 protocols that record no token.</p>
 </header>
 
 <section class="controls" aria-label="Board controls">

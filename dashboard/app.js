@@ -11,6 +11,7 @@ const rows = R.rows.map((a) => ({
   rank: a[0], slug: a[1], name: a[2], category: a[3], chains: a[4], tvl: a[5],
   chg: a[6], age: a[7], implied: a[8], conf: a[9], watch: a[10] === 1,
   multiple: a[11], momentum: a[12], maturity: a[13], breadth: a[14],
+  peers: a[15], peerMedian: a[16], dampedChg: a[17],
 }));
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +27,56 @@ function farmCapital(tvl) {
   return 400;
 }
 const money = (n) => `$${n.toLocaleString('en-US')}`;
+const pct = (n) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
+const PLAN_TOTALS = {
+  'Lending': { fees: 'about $60 in gas and interest', weeks: 10 },
+  'Dexs': { fees: 'about $85 in fees, slippage and gas', weeks: 8 },
+  'DEX': { fees: 'about $85 in fees, slippage and gas', weeks: 8 },
+  'Bridge': { fees: 'about $55 in bridge fees and gas', weeks: 10 },
+  'Canonical Bridge': { fees: 'about $55 in bridge fees and gas', weeks: 10 },
+  'Liquid Staking': { fees: 'about $30 in gas', weeks: 12 },
+  'Liquid Restaking': { fees: 'about $30 in gas', weeks: 12 },
+  'Restaking': { fees: 'about $30 in gas', weeks: 12 },
+  'Risk Curators': { fees: 'about $28 in gas', weeks: 10 },
+  'Onchain Capital Allocator': { fees: 'about $28 in gas', weeks: 10 },
+  'Yield': { fees: 'about $38 in gas', weeks: 10 },
+  'Chain': { fees: 'about $75 in bridge fees, gas and mints', weeks: 12 },
+  'CEX': { fees: 'about $25 in trading fees', weeks: 8 },
+  'CeDeFi': { fees: 'about $25 in trading fees', weeks: 8 },
+  'Derivatives': { fees: 'about $40 in trading fees', weeks: 8 },
+  'Perps': { fees: 'about $40 in trading fees', weeks: 8 },
+  'RWA': { fees: 'no platform fees beyond the funding transfer', weeks: 10 },
+  'Insurance': { fees: 'about $16 in gas plus the cover premium below', weeks: 12 },
+  'Basis Trading': { fees: 'about $18 in gas', weeks: 10 },
+};
+const PLAN_TOTALS_DEFAULT = { fees: 'about $45 in gas', weeks: 10 };
+function timingStep(r) {
+  const cap = farmCapital(r.tvl);
+  const chg = r.chg;
+  const name = r.name;
+  let step;
+  if (chg === null) {
+    step = `The snapshot reports no 7-day TVL change for ${name}, so enter steadily: split the ${money(cap)} across three weekly tranches instead of one deposit, so any launch window finds the wallet already active (3 weeks, gas about $8).`;
+  } else if (chg >= 5) {
+    step = `${name}'s TVL climbed ${pct(chg)} in the snapshot's last 7 days — the pattern that precedes a points season — so front-load this plan: finish the first two steps inside 2 weeks while the climb lasts, then hold the position (no extra cost).`;
+  } else if (chg <= -5) {
+    step = `${name}'s TVL fell ${pct(chg)} in the snapshot's last 7 days, so stage in small: run the first step at half size, ${money(Math.round(cap / 2))}, until the outflow flattens for two straight weeks, and only then build to the full ${money(cap)} (keeps ${money(Math.round(cap / 2))} out of a falling pool).`;
+  } else {
+    step = `${name}'s TVL moved only ${pct(chg)} in the snapshot's last 7 days, a flat tape, so pace the entries: one tranche a week for the first 3 weeks, so the wallet's record predates any announcement by a month or more (gas about $8).`;
+  }
+  if (r.chains.length >= 3) {
+    step += ` Run the second tranche on ${r.chains[2]}, the third chain in ${name}'s own record, so the history spans three networks rather than one.`;
+  }
+  return step;
+}
+function planSummary(r) {
+  const cap = farmCapital(r.tvl);
+  const t = PLAN_TOTALS[r.category ?? ''] ?? PLAN_TOTALS_DEFAULT;
+  const fees = (r.category ?? '') === 'Insurance'
+    ? `about $16 in gas plus a cover premium of about ${money(Math.round(cap / 10))}`
+    : t.fees;
+  return `Plan total for ${r.name}: ${fees} on top of the ${money(cap)} working capital, spread over ${t.weeks} weeks — then keep the dated log current and be ready to claim within the first week if a token or points conversion is announced (1 hour a month, no cost).`;
+}
 function farmSteps(r) {
   const chain = r.chains[0] ?? 'Ethereum';
   const chain2 = r.chains[1] ?? chain;
@@ -33,7 +84,6 @@ function farmSteps(r) {
   const cat = r.category ?? '';
   const name = r.name;
   const open = `Open ${name} on ${chain}, connect a fresh wallet and complete its onboarding or points registration in one sitting (about 20 minutes, under $5 in gas).`;
-  const close = `Keep a dated log of every deposit, trade and claim for ${name}; review it monthly and be ready to claim within the first week if a token or points conversion is announced (1 hour a month, no cost).`;
   let core;
   if (cat === 'Lending') {
     core = [
@@ -114,7 +164,7 @@ function farmSteps(r) {
       `Repeat the main action on ${chain2} in two separate weeks so the record spans two chains and at least three calendar months (gas about $10).`,
     ];
   }
-  return [open, ...core, close];
+  return [open, core[0], core[1], timingStep(r), planSummary(r)];
 }
 
 /* --- rendering --- */
@@ -170,10 +220,13 @@ function select(slug, scroll) {
     <div class="math">
       <div class="kv"><dt>TVL</dt><dd>${fmtFull(r.tvl)}</dd>
       <dt>× sector multiple (${r.category ?? 'default'})</dt><dd>${r.multiple.toFixed(2)}</dd>
-      <dt>× momentum (7d ${r.chg === null ? 'n/a' : `${r.chg.toFixed(1)}%`})</dt><dd>${r.momentum.toFixed(2)}</dd>
+      <dt>× momentum (7d ${r.chg === null ? 'n/a' : `${r.chg.toFixed(1)}%`}${r.dampedChg === null ? '' : `, damped to ${r.dampedChg.toFixed(1)}% at this size`})</dt><dd>${r.momentum.toFixed(2)}</dd>
       <dt>× maturity (${fmtAge(r.age)} tokenless)</dt><dd>${r.maturity.toFixed(2)}</dd>
       <dt>× breadth (${r.chains.length} chain${r.chains.length === 1 ? '' : 's'})</dt><dd>${r.breadth.toFixed(2)}</dd></div>
       <div class="math total">= ${fmtFull(r.implied)} implied token value</div>
+      <p class="sub">${r.peers > 0
+        ? `Sector multiple measured from this snapshot: × ${r.multiple.toFixed(2)} — median of ${r.peers} tokenized ${r.category ?? ''} protocol${r.peers === 1 ? '' : 's'} in this snapshot (their median market cap is ${r.peerMedian.toFixed(2)}× TVL), blended with the model's prior by peer count.`
+        : `Sector multiple is the model's prior: no tokenized ${r.category ?? 'sector'} protocols in this snapshot to measure it from.`}</p>
     </div>
     <h3>Chains</h3>
     <div class="chips">${r.chains.map((c) => `<span class="chip">${c}</span>`).join('')}</div>
@@ -191,6 +244,7 @@ const totalImplied = rows.reduce((a, r) => a + r.implied, 0);
 $('stats').innerHTML = `
   <div><dt>Protocols ranked</dt><dd>${rows.length}</dd></div>
   <div><dt>Watchlist covered</dt><dd>${rows.filter((r) => r.watch).length} / ${R.watch_total}</dd></div>
+  <div><dt>Tokenized, set aside</dt><dd>${R.tokenized}</dd></div>
   <div><dt>Combined implied value</dt><dd>${fmt$(totalImplied)}</dd></div>`;
 $('asof').textContent = R.as_of;
 for (const id of ['q', 'cat', 'chain', 'watch', 'sort']) $(id).addEventListener('input', render);
