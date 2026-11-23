@@ -1,5 +1,8 @@
-[![Built for make.fun](https://make.fun/badge.svg)](https://make.fun)
-[make.fun](https://make.fun) · Entered by [@xavier015869](https://make.fun/@xavier015869) · Referral: https://make.fun/r/9d3wsaqp
+# token-radar-01
+
+[![make.fun · token-radar-01](https://make.fun/badge/token-radar-01.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+
+Entered by [@xavier015869](https://make.fun/@xavier015869) — referral: https://make.fun/r/9d3wsaqp
 
 # Token Launch Radar
 
